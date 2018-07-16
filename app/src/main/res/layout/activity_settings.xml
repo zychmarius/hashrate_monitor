@@ -4,11 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".Settings">
 
     <LinearLayout
         android:layout_width="368dp"
-        android:layout_height="292dp"
+        android:layout_height="300dp"
         android:layout_marginBottom="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginLeft="8dp"
@@ -18,48 +18,49 @@
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.541">
+        app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/hashrateMain"
+        <EditText
+            android:id="@+id/hasrateValue"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="210Mh/s"
-            android:textSize="65sp" />
-
-        <TextView
-            android:id="@+id/textView4"
-            android:layout_width="match_parent"
-            android:layout_height="44dp"
-            android:text="TextView" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/startMain"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Start" />
-
-            <Button
-                android:id="@+id/stopMain"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Stop" />
-        </LinearLayout>
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:text="Name" />
 
         <Button
-            android:id="@+id/setingsMain"
+            android:id="@+id/button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="settings" />
+            android:text="Set hashrate alarm" />
+
+        <EditText
+            android:id="@+id/apikeySet"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:text="Name" />
+
+        <Button
+            android:id="@+id/apikeySetButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="set apikey" />
+
+        <EditText
+            android:id="@+id/setID"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:text="Name" />
+
+        <Button
+            android:id="@+id/setIDButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Set ID" />
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>
