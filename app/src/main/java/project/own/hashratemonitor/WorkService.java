@@ -1,11 +1,20 @@
 package project.own.hashratemonitor;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -34,7 +43,14 @@ public class WorkService extends Service{
     private class MyTimerTask extends TimerTask {
         @Override
         public void run() {
+
             webStart();
+
+        }
+    }
+    public void testNotification(){
+        if(hashrateMessage!= null && Integer.parseInt(hashrateMessage)<130){
+            createNotification();
         }
     }
 
@@ -88,6 +104,21 @@ public class WorkService extends Service{
 
     }
 
+    private void createNotification() {
+        Uri uri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default")
+                .setSmallIcon(R.drawable.ic_launcher_background)
+                .setContentTitle("Low Hashrate")
+                .setContentText("Low hasrate")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setSound(uri)
+                .setVibrate(new long[] {10, 500});
+
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager.notify(0, mBuilder.build());
+
+    }
+
     private class WebServicesHandler extends AsyncTask<String, Void, String> {
 
 
@@ -123,24 +154,13 @@ public class WorkService extends Service{
                 JSONObject json = new JSONObject(result);
                 JSONObject getuserhashrate = json.getJSONObject("getuserhashrate");
                 String hashrate = getuserhashrate.getString("data");
-                int i =0;
-                String endHashrate;
-                while (hashrate.charAt(i)!='.'){
-                    i++;
-                }
-                if(i<2){
-                    endHashrate = "0";
-                }else if(i<3){
-                    endHashrate = hashrate.substring(0,i);
-                    endHashrate = "0.0"+endHashrate;
-                }else if(i<4){
-                    endHashrate = hashrate.substring(0,i);
-                    endHashrate = "0."+endHashrate;
-                }else {
-                    endHashrate = hashrate.substring(0,i-3);
-                }
-                hashrateMessage = endHashrate;
 
+                Double value = Double.valueOf(hashrate);
+                Integer integer = value.intValue()/1000;
+
+
+                hashrateMessage = String.valueOf(integer);
+                testNotification();
             }catch (Exception e) {
                 Log.d(MainActivity.class.getSimpleName(), e.toString());
             }

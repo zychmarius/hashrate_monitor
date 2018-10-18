@@ -1,12 +1,20 @@
 package project.own.hashratemonitor;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -23,6 +31,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.channels.Channel;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -34,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView hashrateField;
     private TextView infoStatusText ;
     private WorkService workService;
+    private boolean isBound;
 
 
     private ServiceConnection serviceConnection =new ServiceConnection() {
@@ -69,26 +79,28 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
     public void clickStartButton(View view){
         infoStatusText = (TextView)findViewById(R.id.infoStatusText);
         startBackgroundWorkService();
-
         infoStatusText.setText("sledzenie w toku aby wtrzymać kliknij stop");
 
     }
 
 
     public void clickStopButton(View view){
-        stopBackgroundWorkService();
-        infoStatusText = (TextView)findViewById(R.id.infoStatusText);
-        infoStatusText.setText("sledzenie wsztrzymane aby rozpocząć kliknij start");
+        if(isBound) {
+            stopBackgroundWorkService();
+            infoStatusText = (TextView) findViewById(R.id.infoStatusText);
+            infoStatusText.setText("sledzenie wsztrzymane aby rozpocząć kliknij start");
+            isBound = false;
+        }
     }
 
     private void startBackgroundWorkService() {
         Intent serviceIntent = new Intent(this, WorkService.class);
         startService(serviceIntent);
-        bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-
+        isBound = bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
     private void showHashrate() {
@@ -114,6 +126,20 @@ public class MainActivity extends AppCompatActivity {
             showHashrate();
         }
     }
-    
+//    private void createNotification() {
+//       Uri uri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+//       NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default")
+//                .setSmallIcon(R.drawable.ic_launcher_background)
+//                .setContentTitle("Low Hashrate")
+//                .setContentText("Low hasrate")
+//                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+//                .setSound(uri)
+//                .setVibrate(new long[] {10, 500});
+//
+//        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+//        mNotificationManager.notify(0, mBuilder.build());
+//
+//    }
+
 
 }
