@@ -1,8 +1,10 @@
 package project.own.hashratemonitor;
 
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView hashrateField;
     private TextView infoStatusText;
     private WorkService workService;
+    private HashrateReciever hashrateReciever = new HashrateReciever();
 
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -42,17 +45,18 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        hashrateField = (TextView) findViewById(R.id.hashrateField);
+        registerReceiver(hashrateReciever, new IntentFilter(WorkService.HASHRATE_SEND));
 
 
-        final Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                //Do something after 100ms
-                showHashrate();
-                handler.postDelayed(this, 5000);
-            }
-        }, 1500);
+//        final Handler handler = new Handler();
+//        handler.postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                showHashrate();
+//                handler.postDelayed(this, 5000);
+//            }
+//        }, 1500);
 
 
     }
@@ -96,12 +100,16 @@ public class MainActivity extends AppCompatActivity {
         startActivity(openSettingsScreen);
     }
 
-    private class MyTimerTask extends TimerTask {
+    public class HashrateReciever extends BroadcastReceiver{
         @Override
-        public void run() {
-            showHashrate();
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(WorkService.HASHRATE_SEND)) {
+                String hashrateMessage = intent.getExtras().getString(WorkService.HASHRATE_VALUE);
+                hashrateField.setText(hashrateMessage);
+            }
         }
     }
+
 
 
 }

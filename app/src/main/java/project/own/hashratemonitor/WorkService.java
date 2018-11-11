@@ -1,13 +1,18 @@
 package project.own.hashratemonitor;
 
+import android.app.NotificationManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.widget.TextView;
 
 import org.json.JSONObject;
 
@@ -23,9 +28,13 @@ import java.util.TimerTask;
 
 public class WorkService extends Service{
 
+    public static final String HASHRATE_SEND = "hashrateValueSend";
+    public static final String HASHRATE_VALUE = "hashrateValueMessage";
+
     private String hashrateMessage;
     private Timer timer;
     private TimerTask timerTask;
+    private Integer hashrateAlarmValue;
 
     public String showHashrate() {
         return hashrateMessage;
@@ -34,7 +43,14 @@ public class WorkService extends Service{
     private class MyTimerTask extends TimerTask {
         @Override
         public void run() {
+
             webStart();
+
+        }
+    }
+    public void testNotification(){
+        if(hashrateMessage!= null && Integer.parseInt(hashrateMessage)<hashrateAlarmValue){
+            createNotification();
         }
     }
 
@@ -53,11 +69,9 @@ public class WorkService extends Service{
     @Override
     public void onCreate(){
         super.onCreate();
+        SharedPreferences preferences = getSharedPreferences(Settings.SETTINGS, MODE_PRIVATE);
+        hashrateAlarmValue = Integer.valueOf(preferences.getString(Settings.HASHRATE_ALARM_VALUE, "0"));
         timer = new Timer();
-    }
-    public void setStartHashrate(String hashrateMessage){
-        this.hashrateMessage = hashrateMessage;
-
     }
 
     @Override
@@ -85,6 +99,28 @@ public class WorkService extends Service{
     public  void webStart(){
         new WebServicesHandler()
                 .execute("https://ethereum.miningpoolhub.com/index.php?page=api&action=getuserhashrate&api_key=3e32dafdb817ef7add17f2dd0db0ef05e50a4d3780cabb03830cfd2ae21fc944&id=150097");
+
+    }
+
+    private void createNotification() {
+        Uri uri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default")
+                .setSmallIcon(R.drawable.ic_launcher_background)
+                .setContentTitle("Low Hashrate")
+                .setContentText("Low hasrate")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setSound(uri)
+                .setVibrate(new long[] {10, 500});
+
+        NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager.notify(0, mBuilder.build());
+
+    }
+    private void sendHashrateBroadcast(String hashrateValue){
+        Intent broadcastIntent = new Intent();
+        broadcastIntent.setAction(HASHRATE_SEND);
+        broadcastIntent.putExtra(HASHRATE_VALUE, hashrateValue);
+        sendBroadcast(broadcastIntent);
 
     }
 
@@ -123,24 +159,13 @@ public class WorkService extends Service{
                 JSONObject json = new JSONObject(result);
                 JSONObject getuserhashrate = json.getJSONObject("getuserhashrate");
                 String hashrate = getuserhashrate.getString("data");
-                int i =0;
-                String endHashrate;
-                while (hashrate.charAt(i)!='.'){
-                    i++;
-                }
-                if(i<2){
-                    endHashrate = "0";
-                }else if(i<3){
-                    endHashrate = hashrate.substring(0,i);
-                    endHashrate = "0.0"+endHashrate;
-                }else if(i<4){
-                    endHashrate = hashrate.substring(0,i);
-                    endHashrate = "0."+endHashrate;
-                }else {
-                    endHashrate = hashrate.substring(0,i-3);
-                }
-                hashrateMessage = endHashrate;
 
+                Double value = Double.valueOf(hashrate);
+                Integer integer = value.intValue()/1000;
+
+                sendHashrateBroadcast(String.valueOf(integer));
+
+                testNotification();
             }catch (Exception e) {
                 Log.d(MainActivity.class.getSimpleName(), e.toString());
             }
