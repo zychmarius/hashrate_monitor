@@ -26,11 +26,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
-            android:inputType="textPersonName"
+            android:inputType="number"
             android:text="HASHRATE VALUE" />
 
         <Button
-            android:id="@+id/button"
+            android:id="@+id/setHashrateButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Set hashrate alarm" />
@@ -54,7 +54,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
-            android:inputType="textPersonName"
+            android:inputType="number"
             android:text="ID" />
 
         <Button
