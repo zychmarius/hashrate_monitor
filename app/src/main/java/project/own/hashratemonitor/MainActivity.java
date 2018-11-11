@@ -7,14 +7,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-
-import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,7 +21,9 @@ public class MainActivity extends AppCompatActivity {
     private TextView hashrateField;
     private TextView infoStatusText;
     private WorkService workService;
+    private boolean isBound;
     private HashrateReciever hashrateReciever = new HashrateReciever();
+
 
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -49,16 +48,6 @@ public class MainActivity extends AppCompatActivity {
         registerReceiver(hashrateReciever, new IntentFilter(WorkService.HASHRATE_SEND));
 
 
-//        final Handler handler = new Handler();
-//        handler.postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                showHashrate();
-//                handler.postDelayed(this, 5000);
-//            }
-//        }, 1500);
-
-
     }
 
     public void clickStartButton(View view) {
@@ -70,24 +59,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void clickStopButton(View view) {
-        stopBackgroundWorkService();
-        infoStatusText = (TextView) findViewById(R.id.infoStatusText);
-        infoStatusText.setText("sledzenie wsztrzymane aby rozpocząć kliknij start");
+    public void clickStopButton(View view){
+        if(isBound) {
+            stopBackgroundWorkService();
+            infoStatusText = (TextView) findViewById(R.id.infoStatusText);
+            infoStatusText.setText("sledzenie wsztrzymane aby rozpocząć kliknij start");
+            isBound = false;
+        }
     }
 
     private void startBackgroundWorkService() {
         Intent serviceIntent = new Intent(this, WorkService.class);
         startService(serviceIntent);
-        bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        isBound = bindService(serviceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
     }
 
-    private void showHashrate() {
-        if (workService != null) {
-            ((TextView) findViewById(R.id.hashrateField)).setText(workService.showHashrate());
-        }
-    }
 
     private void stopBackgroundWorkService() {
         Intent serviceIntent = new Intent(this, WorkService.class);

@@ -26,19 +26,20 @@ import java.net.URLConnection;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class WorkService extends Service{
+public class WorkService extends Service {
 
     public static final String HASHRATE_SEND = "hashrateValueSend";
     public static final String HASHRATE_VALUE = "hashrateValueMessage";
+    public static final String ETH_ADDRESS = "https://ethereum.miningpoolhub.com/index.php?page=api&action=getuserhashrate";
 
-    private String hashrateMessage;
+    private final IBinder binder = new MyBinder();
+
+
     private Timer timer;
     private TimerTask timerTask;
     private Integer hashrateAlarmValue;
+    private String adsressHTTP;
 
-    public String showHashrate() {
-        return hashrateMessage;
-    }
 
     private class MyTimerTask extends TimerTask {
         @Override
@@ -48,15 +49,16 @@ public class WorkService extends Service{
 
         }
     }
-    public void testNotification(){
-        if(hashrateMessage!= null && Integer.parseInt(hashrateMessage)<hashrateAlarmValue){
+
+    public void testNotification(Integer actualHashrate) {
+        if (actualHashrate != null && actualHashrate < hashrateAlarmValue) {
             createNotification();
         }
     }
 
-    private final IBinder binder = new MyBinder();
-    public class MyBinder extends Binder{
-        WorkService getworkService(){
+
+    public class MyBinder extends Binder {
+        WorkService getworkService() {
             return WorkService.this;
         }
     }
@@ -66,57 +68,66 @@ public class WorkService extends Service{
     public IBinder onBind(Intent intent) {
         return binder;
     }
+
     @Override
-    public void onCreate(){
+    public void onCreate() {
         super.onCreate();
         SharedPreferences preferences = getSharedPreferences(Settings.SETTINGS, MODE_PRIVATE);
         hashrateAlarmValue = Integer.valueOf(preferences.getString(Settings.HASHRATE_ALARM_VALUE, "0"));
+        adsressHTTP = ETH_ADDRESS
+                + "&api_key="
+                + preferences.getString(Settings.ETHEREUM_APIKEY, "")
+                + "&id="
+                + preferences.getString(Settings.USER_ID, "");
         timer = new Timer();
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId){
+    public int onStartCommand(Intent intent, int flags, int startId) {
         clearTimerSchedule();
         initTask();
-        timer.scheduleAtFixedRate(timerTask, 0 * 1000, 60 * 1000);
+        timer.scheduleAtFixedRate(timerTask, 0, 60 * 1000);
         return super.onStartCommand(intent, flags, startId);
     }
+
     private void clearTimerSchedule() {
-        if(timerTask != null) {
+        if (timerTask != null) {
             timerTask.cancel();
             timer.purge();
         }
     }
+
     private void initTask() {
         timerTask = new MyTimerTask();
     }
 
     @Override
-    public void onDestroy(){
+    public void onDestroy() {
         clearTimerSchedule();
         super.onDestroy();
     }
-    public  void webStart(){
-        new WebServicesHandler()
-                .execute("https://ethereum.miningpoolhub.com/index.php?page=api&action=getuserhashrate&api_key=3e32dafdb817ef7add17f2dd0db0ef05e50a4d3780cabb03830cfd2ae21fc944&id=150097");
 
+    public void webStart() {
+        new WebServicesHandler()
+                .execute(adsressHTTP);
     }
 
     private void createNotification() {
-        Uri uri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(this, "default")
                 .setSmallIcon(R.drawable.ic_launcher_background)
                 .setContentTitle("Low Hashrate")
                 .setContentText("Low hasrate")
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setSound(uri)
-                .setVibrate(new long[] {10, 500});
+                .setVibrate(new long[]{10, 500});
 
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.notify(0, mBuilder.build());
 
     }
-    private void sendHashrateBroadcast(String hashrateValue){
+
+    private void sendHashrateBroadcast(String hashrateValue) {
         Intent broadcastIntent = new Intent();
         broadcastIntent.setAction(HASHRATE_SEND);
         broadcastIntent.putExtra(HASHRATE_VALUE, hashrateValue);
@@ -128,29 +139,28 @@ public class WorkService extends Service{
 
 
         @Override
-        protected void onPreExecute(){
+        protected void onPreExecute() {
 
         }
 
         @Override
-        protected String doInBackground(String... urls){
+        protected String doInBackground(String... urls) {
 
-            try{
+            try {
                 URL url = new URL(urls[0]);
                 URLConnection connection = url.openConnection();
 
                 InputStream in = new BufferedInputStream(connection.getInputStream());
 
                 return streamToString(in);
-            }catch (Exception e){
+            } catch (Exception e) {
                 Log.d(MainActivity.class.getSimpleName(), e.toString());
                 return null;
             }
         }
 
         @Override
-        protected void onPostExecute(String result){
-
+        protected void onPostExecute(String result) {
 
 
             try {
@@ -161,16 +171,17 @@ public class WorkService extends Service{
                 String hashrate = getuserhashrate.getString("data");
 
                 Double value = Double.valueOf(hashrate);
-                Integer integer = value.intValue()/1000;
+                Integer integer = value.intValue() / 1000;
 
                 sendHashrateBroadcast(String.valueOf(integer));
 
-                testNotification();
-            }catch (Exception e) {
+                testNotification(integer);
+            } catch (Exception e) {
                 Log.d(MainActivity.class.getSimpleName(), e.toString());
             }
         }
     }
+
     public static String streamToString(InputStream is) {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         StringBuilder stringBuilder = new StringBuilder();
@@ -190,7 +201,6 @@ public class WorkService extends Service{
 
         return stringBuilder.toString();
     }
-
 
 
 }

@@ -45,8 +45,8 @@ public class Settings extends AppCompatActivity {
         setApikey.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-               editor.putString(ETHEREUM_APIKEY, ethApikey.getText().toString());
-               editor.commit();
+                editor.putString(ETHEREUM_APIKEY, ethApikey.getText().toString());
+                editor.commit();
             }
         });
         setID = (Button) findViewById(R.id.setIDButton);
